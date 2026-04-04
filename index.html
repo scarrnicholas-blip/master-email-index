@@ -6,6 +6,17 @@
 <title>Master Email Index — Scarr v Sainsbury's Bank Insurance — April 2026</title>
 <style>* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #1a1a2e; }
+#auth-gate { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1a1a2e 0%, #2d3561 100%); }
+#auth-gate .auth-box { background: white; border-radius: 16px; padding: 40px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; }
+#auth-gate h2 { font-size: 20px; color: #1a1a2e; margin-bottom: 6px; }
+#auth-gate .auth-sub { font-size: 13px; color: #64748b; margin-bottom: 24px; }
+#auth-gate input { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; outline: none; transition: border-color 0.2s; }
+#auth-gate input:focus { border-color: #2d3561; }
+#auth-gate button { width: 100%; margin-top: 12px; padding: 12px; background: linear-gradient(135deg, #1a1a2e, #2d3561); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+#auth-gate button:hover { opacity: 0.9; }
+#auth-gate .auth-error { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; }
+#auth-gate .auth-lock { font-size: 40px; margin-bottom: 16px; }
+#main-content { display: none; }
 .header { background: linear-gradient(135deg, #1a1a2e 0%, #2d3561 100%); color: white; padding: 28px 32px; }
 .header h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
 .header .sub { font-size: 13px; color: #a8b2d1; }
@@ -66,6 +77,17 @@ td.ref { color: #94a3b8; font-size: 11px; font-family: monospace; }
 .src-filter-active { background: #ea4335 !important; color: white !important; border-color: #ea4335 !important; }</style>
 </head>
 <body>
+<div id="auth-gate">
+  <div class="auth-box">
+    <div class="auth-lock">&#128274;</div>
+    <h2>Protected Document</h2>
+    <p class="auth-sub">Master Email Index — Scarr v Sainsbury's Bank Insurance</p>
+    <input type="password" id="auth-pw" placeholder="Enter password" autocomplete="off" onkeydown="if(event.key==='Enter')checkAuth()">
+    <button onclick="checkAuth()">Unlock</button>
+    <p class="auth-error" id="auth-err">Incorrect password. Please try again.</p>
+  </div>
+</div>
+<div id="main-content">
 <div class="header">
     <h1>Master Email Index — Insurance Claim Correspondence</h1>
     <div class="sub">Scarr v Sainsbury's Bank Insurance — 1 Riverside Cottages, The Dean, Alresford SO24 9BE</div>
@@ -2272,4 +2294,29 @@ headers.forEach(th => {
         });
         rows.forEach(r => tbody.appendChild(r));
     });
-});</script></body></html>
+});
+</script>
+</div><!-- end main-content -->
+<script>
+async function checkAuth() {
+  const pw = document.getElementById('auth-pw').value;
+  const enc = new TextEncoder();
+  const hash = await crypto.subtle.digest('SHA-256', enc.encode(pw));
+  const hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  if (hex === 'b3c9ecf229f319fc0b02d3fe5788a2c9252c5bd657f6bbad07242423116cceae') {
+    document.getElementById('auth-gate').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    sessionStorage.setItem('mei-auth', '1');
+  } else {
+    document.getElementById('auth-err').style.display = 'block';
+    document.getElementById('auth-pw').value = '';
+    document.getElementById('auth-pw').focus();
+  }
+}
+// Auto-unlock if already authenticated this session
+if (sessionStorage.getItem('mei-auth') === '1') {
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('main-content').style.display = 'block';
+}
+</script>
+</body></html>
