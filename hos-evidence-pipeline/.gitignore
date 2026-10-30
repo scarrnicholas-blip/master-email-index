@@ -1,0 +1,13 @@
+# Never commit decision texts, coded outputs or API results: the archive is a
+# private reference copy and is not for republication.
+work/
+data/
+outputs/
+*.html.gz
+*.jsonl
+!tests/fixtures/**/*.jsonl
+config.yaml
+.env
+__pycache__/
+*.egg-info/
+.pytest_cache/

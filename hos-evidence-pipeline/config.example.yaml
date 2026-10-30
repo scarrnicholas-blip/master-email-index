@@ -1,0 +1,44 @@
+# Copy to config.yaml (git-ignored) and adjust. Relative paths are relative to
+# this file. Anything left out takes the default in src/hos_pipeline/config.py.
+
+paths:
+  archive_dir: "~/NoMug HOS Archive"      # html/<year>/<case id>.html.gz + manifest.tsv
+  work_dir: "./work"                       # all intermediate and output files (git-ignored)
+  codebook: "./codebook/codebook.yaml"     # replace the DRAFT wording with the coding manual
+  entity_aliases: "./codebook/entity_aliases.yaml"
+  # rsh_sdr: "~/Data/RSH/SDR_2025.xlsx"    # Regulator of Social Housing Statistical Data Return
+  # lahs: "~/Data/LAHS/LAHS_2024-25.csv"   # Local Authority Housing Statistics
+  # bank_holidays_json: "~/Data/bank-holidays.json"   # https://www.gov.uk/bank-holidays.json
+
+screening:
+  min_mentions: 3
+  years: [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
+
+sampling:
+  seed: 20261030
+  strata: [year, landlord_type]
+  target_n: 1667
+  min_per_stratum: 5
+
+llm:
+  # The API key is read from ANTHROPIC_API_KEY (or an `ant auth login` profile).
+  model: claude-opus-5-5
+  verifier_model: claude-opus-5-5
+  classifier_model: claude-opus-5-5
+  effort_coding: high
+  effort_verify: high
+  effort_classify: medium
+  max_tokens: 16000
+  concurrency: 8
+  use_batches: true            # Message Batches API: half price, results within 24 hours
+  server_side_fallback: true   # retry on another model if a request is refused
+
+awaab:
+  commencement: "2025-10-27"
+
+stats:
+  pooled_years: [2019, 2020, 2021, 2022, 2023, 2024, 2025]
+  permutations: 2000
+  cv_folds: 5
+  seed: 20261030
+  alpha: 0.05
