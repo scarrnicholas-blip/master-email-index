@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hos-pipeline"
+version = "0.1.0"
+description = "Reproducible pipeline for the Housing Ombudsman damp and mould evidence pack"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=0.70",
+    "beautifulsoup4>=4.12",
+    "lxml>=5",
+    "matplotlib>=3.8",
+    "numpy>=1.26",
+    "openpyxl>=3.1",
+    "pandas>=2.1",
+    "pydantic>=2.6",
+    "pyyaml>=6",
+    "rapidfuzz>=3",
+    "scikit-learn>=1.4",
+    "scipy>=1.11",
+    "statsmodels>=0.14",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+hos-pipeline = "hos_pipeline.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+hos_pipeline = ["llm/prompts/*.md", "awaab/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
