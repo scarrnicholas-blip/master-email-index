@@ -59,7 +59,7 @@ class LLM(BaseModel):
     effort_coding: str = "high"
     effort_verify: str = "high"
     effort_classify: str = "medium"
-    max_tokens: int = 16000
+    max_tokens: int = 48000
     concurrency: int = 8
     use_batches: bool = Field(default=True, description="Message Batches API: half price, results within 24h")
     server_side_fallback: bool = True

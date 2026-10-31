@@ -1,0 +1,121 @@
+# Awaab's Law duty table for Stage 6 (hos_pipeline.awaab.duties).
+#
+# Instrument: The Hazards in Social Housing (Prescribed Requirements) (England)
+# Regulations 2025, SI 2025/1042. Duties for damp and mould and for emergency
+# hazards commenced on 27 October 2025; the engine reads the commencement date
+# from Settings.awaab.commencement, not from this file.
+#
+# VERIFICATION STATUS: NOT VERIFIED. legislation.gov.uk could not be reached
+# from the build environment (30 Oct 2026), so no regulation text was read.
+# Every limit, trigger and action below comes from the user's evidence pack and
+# is marked "user-specified; verify against SI 2025/1042". Labels are
+# plain-English summaries, not statutory wording. Before publishing any
+# statement that a landlord "breached" a duty, check each row against the SI
+# (what must happen within the period, and from which day it runs) and record
+# the regulation number in `source`.
+#
+# Fields
+#   key               duty id written to DutyCheck.duty
+#   label             plain-English summary (not a quotation)
+#   applies_to        significant | emergency. Emergency duties are checked only
+#                     when the decision has an emergency_identified event.
+#   trigger           event type that starts the clock; its date is day 0
+#   fallback_triggers event types tried in order when there is no dated
+#                     trigger; each must mark the same moment as the trigger
+#   action            event type that discharges the duty
+#   fallback_actions  tried in order when there is no dated `action` on or
+#                     after the trigger. `bound` says what the fallback proves:
+#                       equivalent  counts as the action itself
+#                       lower       never later than the true action: can show
+#                                   a breach, never that the duty was met
+#                       upper       never earlier than the true action: can show
+#                                   the duty was met, never a breach
+#   limit             {value, unit}; unit: working_days | hours | calendar_days | weeks
+#   source            where the row comes from
+#   notes             caveats for reviewers
+#
+# Where a decision has several events of one type, the engine uses the
+# earliest dated trigger and then the first action on or after it.
+
+duties:
+  - key: emergency_24h
+    label: "Emergency hazard: action within 24 hours of the landlord becoming aware"
+    applies_to: emergency
+    trigger: emergency_identified
+    fallback_triggers: []
+    action: emergency_action
+    fallback_actions:
+      - {event: safety_work_started, bound: equivalent}
+      - {event: decant_started, bound: equivalent}
+    limit: {value: 24, unit: hours}
+    source: "user-specified; verify against SI 2025/1042"
+    notes: >-
+      Decisions give dates, not times, so hours cannot be measured: an action on
+      the same or the next calendar day is treated as met, two or more calendar
+      days later as breached. What must be done within 24 hours (investigation,
+      make-safe work, alternative accommodation) has not been checked against the
+      SI. safety_work_started and decant_started count only when no
+      emergency_action is coded on or after the trigger.
+
+  - key: investigate_significant
+    label: "Potential significant hazard: investigate within 10 working days of becoming aware"
+    applies_to: significant
+    trigger: landlord_aware
+    fallback_triggers: []
+    action: investigation_concluded
+    fallback_actions:
+      - {event: investigation_started, bound: lower}
+    limit: {value: 10, unit: working_days}
+    source: "user-specified; verify against SI 2025/1042"
+    notes: >-
+      The investigation counts as done when it concluded. investigation_started
+      is only a lower bound: an investigation not even started within 10 working
+      days is a breach, but a start within time does not show it concluded in
+      time (possibly_breached). If the SI requires only that the investigation
+      begin within the period, change that bound to equivalent.
+
+  - key: written_summary
+    label: "Written summary of the investigation to the resident within 3 working days of it concluding"
+    applies_to: significant
+    trigger: investigation_concluded
+    fallback_triggers: []
+    action: written_summary_sent
+    fallback_actions: []
+    limit: {value: 3, unit: working_days}
+    source: "user-specified; verify against SI 2025/1042"
+    notes: >-
+      Not checked when the decision records no dated investigation_concluded
+      event; the investigate_significant row covers investigations never
+      concluded.
+
+  - key: safety_work_begin
+    label: "Begin relevant safety work within 5 working days of the investigation concluding"
+    applies_to: significant
+    trigger: investigation_concluded
+    fallback_triggers: []
+    action: safety_work_started
+    fallback_actions:
+      - {event: safety_work_completed, bound: upper}
+    limit: {value: 5, unit: working_days}
+    source: "user-specified; verify against SI 2025/1042"
+    notes: >-
+      Tests when the work began, not whether it was completed within a reasonable
+      time. safety_work_completed is an upper bound on the start, so it can show
+      the duty was met but never a breach. An offer of alternative accommodation
+      (decant_offered / decant_started) is not counted as beginning safety work;
+      review such cases by hand.
+
+  - key: preventive_work_begin
+    label: "Begin supplementary preventive work as soon as reasonably practicable, within 12 weeks"
+    applies_to: significant
+    trigger: investigation_concluded
+    fallback_triggers: []
+    action: preventive_work_started
+    fallback_actions: []
+    limit: {value: 12, unit: weeks}
+    source: "user-specified; verify against SI 2025/1042"
+    notes: >-
+      The user gave the 12-week limit but not the start of the period; the
+      investigation concluding is assumed. "met" means begun within 12 weeks, not
+      that the start was as soon as reasonably practicable. Weeks are counted as
+      started weeks, so 84 calendar days is within 12 weeks and 85 is not.

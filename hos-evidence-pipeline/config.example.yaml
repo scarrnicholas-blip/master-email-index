@@ -28,7 +28,7 @@ llm:
   effort_coding: high
   effort_verify: high
   effort_classify: medium
-  max_tokens: 16000
+  max_tokens: 48000            # includes thinking; calls stream so this is safe
   concurrency: 8
   use_batches: true            # Message Batches API: half price, results within 24 hours
   server_side_fallback: true   # retry on another model if a request is refused

@@ -1,0 +1,752 @@
+# =============================================================================
+# DRAFT — replace the labels and definitions with the wording of the project's
+# coding manual before coding; ids are what the pipeline relies on.
+# =============================================================================
+#
+# Codebook for full-text coding of Housing Ombudsman Service (England)
+# decisions about damp and mould (stages 3-5 of hos_pipeline).
+#
+# What the pipeline relies on (do not rename without changing the code):
+#   hypotheses          ids H1-H12 (all present, each exactly once)
+#   dimensions          ids D1-D13 (all present, each exactly once)
+#   admin_flags         snake_case ids; free to add or remove
+#   event_types         the fixed Awaab's Law event vocabulary (awaab/duties.yaml
+#                       reads these keys from CodedDecision.events)
+#   element_categories  must equal models.ElementCategory
+#   findings            must equal models.Finding
+#
+# Everything else (labels, definitions, include/exclude lists, rules) is
+# rendered verbatim into the model's system prompt, so editing it changes the
+# coding. Bump `version` whenever the wording changes: it is stored on every
+# coded record (CodedDecision.codebook_version).
+#
+# Item fields: id, label, definition, include (list), exclude (list),
+# value_type (optional: what to put in the free `value` field).
+
+version: "draft-0.1"
+
+rules:
+  - id: R1
+    text: >-
+      Code what the Ombudsman found. A failure is present when the Ombudsman's
+      assessment, findings, determination or orders state it, or when the
+      decision sets it out as undisputed fact that the Ombudsman relies on.
+      A resident's allegation, or the landlord's own account, is not a finding
+      unless the Ombudsman accepts it.
+  - id: R2
+    text: >-
+      Every "yes" needs at least one citation to the paragraph(s) where the
+      Ombudsman states or evidences it, written as the paragraph's position tag
+      [pN]. Prefer paragraphs from the assessment, findings and determination
+      over the background summary. Cite the most direct paragraphs; one to four
+      is usually enough.
+  - id: R3
+    text: >-
+      Quotes are optional, verbatim, at most 40 words, and must come from the
+      cited paragraph. Never paraphrase inside a quote; leave the quote empty
+      rather than reconstruct wording.
+  - id: R4
+    text: >-
+      Use "no" when the decision deals with the matter and the Ombudsman did not
+      find the failure (or the remedy was not ordered or recommended). Use
+      "unclear" when the text does not let you decide: the matter is mentioned
+      but not assessed, the wording is ambiguous, or the relevant part of the
+      decision is missing or redacted. Do not guess.
+  - id: R5
+    text: >-
+      Failure hypotheses concern the landlord's handling of damp, mould or
+      condensation at the resident's home, including the complaint about it.
+      Do not code a failure that the Ombudsman found only in an unrelated part
+      of the complaint (for example anti-social behaviour or a rent dispute).
+  - id: R6
+    text: >-
+      Remediation dimensions record what the Ombudsman ordered or recommended in
+      this decision. Redress the landlord offered before the Ombudsman's
+      investigation counts only when the Ombudsman orders it to be paid or done
+      (if not already), or finds it was reasonable redress; record landlord
+      offers as compensation of kind "landlord_offered".
+  - id: R7
+    text: >-
+      Dates: copy the date exactly as written in the decision into date_text
+      ("17 June 2023", "June 2023", "late 2022"). Do not turn vague wording into
+      a precise day. If the decision gives no date for an event, leave the event
+      out rather than estimate it.
+  - id: R8
+    text: >-
+      Cite paragraph position tags [pN] exactly as they appear at the start of
+      each line, not the Ombudsman's own paragraph numbers shown in brackets.
+
+hypotheses:
+  - id: H1
+    label: Delayed inspection after report
+    definition: >-
+      The landlord did not inspect or otherwise assess the damp or mould within
+      a reasonable time, or within its own policy timescale, after it was
+      reported or after the landlord otherwise became aware of it.
+    include:
+      - The Ombudsman finds an unreasonable or unexplained gap between the first report and the first inspection or survey.
+      - No inspection was carried out at all despite reports.
+      - The first inspection happened only after a formal complaint or the Ombudsman's involvement, and the Ombudsman criticises the delay.
+    exclude:
+      - Delay in completing works after an inspection (H5, or H12 for failed works).
+      - Delay that the Ombudsman accepts was caused by the resident refusing or cancelling access.
+      - Delay in responding to the complaint itself (H10).
+
+  - id: H2
+    label: Failure to identify or treat the root cause
+    definition: >-
+      The landlord treated the symptoms (mould wash, stain block, anti-mould
+      paint, redecoration) without diagnosing or addressing the cause of the
+      damp, such as a leak, defective roof or guttering, rising or penetrating
+      damp, inadequate ventilation, insulation or heating, so the problem
+      recurred or persisted.
+    include:
+      - Repeated mould treatments or redecoration without investigation of the cause.
+      - The Ombudsman finds the landlord did not establish or address the cause, or did not follow up a surveyor's recommendation about the cause.
+      - Recurrence of mould that the Ombudsman links to the landlord not dealing with the cause.
+    exclude:
+      - Works that were aimed at the cause but were done badly (H12).
+      - Blaming the resident's lifestyle without investigation (H3), unless the decision also finds a separate failure to address the cause.
+
+  - id: H3
+    label: Attributing damp to resident lifestyle without investigation
+    definition: >-
+      The landlord attributed the damp or mould to the resident's lifestyle,
+      condensation from everyday activities, or a failure to heat or ventilate,
+      without adequate investigation of other causes, and the Ombudsman
+      criticises that approach.
+    include:
+      - Condensation or lifestyle advice given in place of an inspection or investigation.
+      - The Ombudsman refers to the Spotlight report finding that damp and mould should not be attributed to lifestyle, in criticising this landlord.
+      - Correspondence that blames the resident and is criticised by the Ombudsman.
+    exclude:
+      - Advice on reducing condensation given alongside a proper investigation, with no criticism by the Ombudsman.
+      - The resident's allegation that they were blamed, where the Ombudsman does not accept it.
+
+  - id: H4
+    label: Failure to consider household vulnerabilities or health
+    definition: >-
+      The landlord did not record, take into account or act on known
+      vulnerabilities in the household (health conditions, especially
+      respiratory; disability; age; young children; pregnancy) or reported
+      health effects, when deciding how urgently and how to respond to damp or
+      mould.
+    include:
+      - The Ombudsman finds the landlord was told of a vulnerability or health effect and did not adjust its response or priority.
+      - No vulnerability or risk assessment despite information that one was needed.
+      - Vulnerabilities not recorded on the landlord's systems, where the Ombudsman criticises that.
+    exclude:
+      - A vulnerability merely mentioned in the background with no finding about the landlord's response (use the resident_vulnerability_noted flag).
+      - Questions of whether damp caused an illness; the Ombudsman does not decide causation of health effects.
+
+  - id: H5
+    label: Failure to progress works (missed appointments, no follow-up, contractors not chased)
+    definition: >-
+      Once action was identified, the landlord did not progress it: missed or
+      cancelled appointments, no follow-up visit, recommended works not booked,
+      contractors not chased or managed, or works left outstanding for an
+      unreasonable time.
+    include:
+      - Missed appointments or no-shows by the landlord or its contractors.
+      - Works recommended by a surveyor or contractor that were not raised or not completed within a reasonable time.
+      - The landlord did not monitor or chase a contractor, or lost track of a job.
+    exclude:
+      - Delay before the first inspection (H1).
+      - Poor workmanship of works that were done (H12).
+      - Delays the Ombudsman accepts were outside the landlord's control (for example access refused, materials unobtainable), where no failure is found.
+
+  - id: H6
+    label: Poor record keeping
+    definition: >-
+      The landlord's records were missing, incomplete or inaccurate (repair
+      logs, inspection or survey findings, contact notes, vulnerability
+      records, evidence of works), and the Ombudsman treats this as a failing
+      or as limiting what the landlord can show.
+    include:
+      - The Ombudsman says there is no record of an inspection, visit, call or job, and criticises the landlord for it.
+      - The landlord could not evidence what it did, or provided inconsistent records.
+      - An explicit finding or order about record keeping or knowledge and information management.
+    exclude:
+      - Records simply not supplied to the Ombudsman without criticism of the landlord's record keeping (use the landlord_failed_to_provide_records flag).
+
+  - id: H7
+    label: Poor communication and updates
+    definition: >-
+      The landlord did not keep the resident informed: unanswered contacts,
+      no updates on progress or next steps, unclear or contradictory
+      information, no explanation of inspection findings or plans, or broken
+      promises to call back.
+    include:
+      - The Ombudsman finds the resident had to chase repeatedly for information.
+      - Failure to explain what was found, what would be done and when.
+      - Inaccurate or misleading information given to the resident.
+    exclude:
+      - Communication failures solely within the complaint process (H10).
+      - Communication with third parties unrelated to the damp or mould.
+
+  - id: H8
+    label: Failure to offer or manage a decant
+    definition: >-
+      The landlord did not consider or offer a temporary move (decant) or
+      alternative accommodation when the Ombudsman finds one was warranted by
+      the conditions or the household's needs, or it managed a decant poorly
+      (delay, unsuitable accommodation, unclear terms, costs not met).
+    include:
+      - The Ombudsman finds the landlord should have considered or offered a decant and did not.
+      - A decant arranged late, to unsuitable accommodation, or without clear information.
+      - Failure to reimburse decant-related costs that the Ombudsman says should have been met.
+    exclude:
+      - A decant offered and refused by the resident, where no failure is found.
+      - A permanent transfer or rehousing request decided under the allocations scheme, unless the Ombudsman links it to the damp handling.
+
+  - id: H9
+    label: Failure to assess risk or escalate
+    definition: >-
+      The landlord did not carry out a risk assessment (for example under the
+      Housing Health and Safety Rating System, HHSRS) or treat the damp or
+      mould as a hazard, did not escalate a serious hazard, or did not respond
+      with the urgency the risk required.
+    include:
+      - No HHSRS or equivalent hazard assessment where the Ombudsman says one was needed.
+      - A serious or emergency hazard treated as routine.
+      - Failure to escalate within the landlord (to a surveyor, manager or specialist) when the problem persisted.
+    exclude:
+      - Ordinary delay in inspection without a risk dimension (H1).
+      - Failure to consider vulnerabilities specifically (H4), unless both are found.
+
+  - id: H10
+    label: Complaint handling failure
+    definition: >-
+      The landlord's handling of the complaint about damp or mould fell short:
+      delay outside its policy or the Complaint Handling Code, failure to log
+      or escalate the complaint, refusal or delay in escalating to stage 2,
+      responses that did not address the issues, or failure to put things
+      right or offer appropriate redress in the response.
+    include:
+      - A finding of service failure, maladministration or severe maladministration in complaint handling.
+      - The Ombudsman criticises response times, missing responses, or the quality of the stage 1 or stage 2 response.
+      - Failure to identify and acknowledge failings in the complaint response.
+    exclude:
+      - Failures in the substantive repair response (other hypotheses), even if raised in the complaint.
+
+  - id: H11
+    label: Failure to learn from the Spotlight report or apply policy
+    definition: >-
+      The landlord did not have, follow or apply an adequate damp and mould
+      policy or procedure, did not apply the Ombudsman's Spotlight report on
+      damp and mould (October 2021) and its recommendations, or did not learn
+      from previous failings, and the Ombudsman says so.
+    include:
+      - The landlord did not follow its own repairs or damp and mould policy or procedure.
+      - The Ombudsman says the landlord's approach was inconsistent with the Spotlight report or its self-assessment against it.
+      - The Ombudsman finds no evidence of learning from this or earlier complaints.
+    exclude:
+      - A policy review ordered as a remedy with no finding of a policy failure (that is dimension D7 or D10 only).
+
+  - id: H12
+    label: Contractor or works quality failures
+    definition: >-
+      Works carried out by the landlord or its contractors were of poor
+      quality, incomplete, ineffective, caused further damage, or contractors'
+      conduct was poor, and the Ombudsman finds this a failing of the landlord.
+    include:
+      - Works that failed and had to be redone.
+      - Damage to the home or belongings caused by the works.
+      - Contractor conduct criticised by the Ombudsman (for example leaving the home in a poor state).
+    exclude:
+      - Works not done at all or not progressed (H5).
+      - Treatment that was done properly but aimed only at symptoms (H2).
+
+dimensions:
+  - id: D1
+    label: Apology
+    definition: The Ombudsman orders or recommends that the landlord apologise to the resident.
+    include:
+      - Written apology ordered, including apologies to be given by a senior officer.
+    exclude:
+      - An apology the landlord already gave, unless a further apology is ordered.
+
+  - id: D2
+    label: Compensation ordered
+    definition: >-
+      The Ombudsman orders the landlord to pay compensation (including payment
+      of an amount the landlord had offered but not paid). value is the total
+      amount ordered in pounds, as a number.
+    value_type: amount_gbp
+    include:
+      - Any order to pay a sum, including "the £X previously offered, if not already paid".
+    exclude:
+      - Compensation only recommended (record as kind "recommended" in compensation; D2 is no).
+      - Compensation offered by the landlord and found to be reasonable redress with no order to pay.
+
+  - id: D3
+    label: Compensation components (distress and inconvenience vs time and trouble)
+    definition: >-
+      The Ombudsman's compensation is broken down into components. value lists
+      the components named, separated by semicolons, from:
+      distress_inconvenience; time_and_trouble; loss_of_use_or_rent;
+      damaged_belongings; decant_costs; other.
+    value_type: components
+    include:
+      - Separate amounts for distress and inconvenience, time and trouble, loss of enjoyment or rent, or damaged items.
+    exclude:
+      - A single unexplained total (D3 is no; D2 may still be yes).
+
+  - id: D4
+    label: Inspection or survey ordered
+    definition: >-
+      The Ombudsman orders or recommends an inspection, survey or specialist
+      assessment of the property. value is the deadline as written, if any.
+    value_type: deadline
+    include:
+      - Inspection by a qualified surveyor, damp specialist or HHSRS assessment ordered.
+    exclude:
+      - An inspection the landlord already carried out.
+
+  - id: D5
+    label: Works ordered with a deadline
+    definition: >-
+      The Ombudsman orders the landlord to carry out or schedule works, or to
+      provide a schedule of works with timescales. value is the deadline as
+      written.
+    value_type: deadline
+    include:
+      - Orders to complete remedial works, or to produce a schedule of works with dates, within a stated period.
+    exclude:
+      - Works the Ombudsman only recommends with no timescale (code yes only if the decision gives a deadline; otherwise unclear or no).
+
+  - id: D6
+    label: Decant or temporary accommodation
+    definition: >-
+      The Ombudsman orders or recommends that the landlord consider, offer or
+      arrange a decant or temporary accommodation, or reimburse decant costs.
+    include:
+      - Orders to assess whether a decant is needed while works are done.
+    exclude:
+      - A decant that already took place with no order about it.
+
+  - id: D7
+    label: Policy or procedure review
+    definition: >-
+      The Ombudsman orders or recommends a review of the landlord's policies or
+      procedures (repairs, complaints, compensation, vulnerability), other
+      than the damp and mould policy itself (D10).
+    include:
+      - Review of the repairs, complaints or compensation policy or of how a process works in practice.
+    exclude:
+      - Reviews limited to the damp and mould policy or Spotlight self-assessment (D10).
+
+  - id: D8
+    label: Staff training
+    definition: The Ombudsman orders or recommends training for staff or contractors.
+    include:
+      - Training on damp and mould, complaint handling, record keeping, vulnerability or communication.
+    exclude:
+      - Generic statements that the landlord should "learn lessons" with no training.
+
+  - id: D9
+    label: Record-keeping improvement
+    definition: >-
+      The Ombudsman orders or recommends improvements to record keeping or
+      knowledge and information management, including self-assessment against
+      the Ombudsman's knowledge and information management report.
+    include:
+      - Orders to review how repairs, inspections, contacts or vulnerabilities are recorded.
+    exclude:
+      - Requests for records for this investigation only.
+
+  - id: D10
+    label: Damp and mould policy or Spotlight self-assessment
+    definition: >-
+      The Ombudsman orders or recommends that the landlord review its damp and
+      mould policy or approach, or self-assess against the Spotlight report on
+      damp and mould.
+    include:
+      - Self-assessment against the Spotlight report or its recommendations.
+      - Review of the damp and mould policy, procedure or approach to condensation.
+    exclude:
+      - Reviews of other policies (D7).
+
+  - id: D11
+    label: Senior management review or learning report
+    definition: >-
+      The Ombudsman orders or recommends a review of the case by senior
+      management or the governing body, or a "learning from" / lessons-learned
+      report.
+    include:
+      - Orders for a senior manager or the board to review the failings and report back.
+      - A learning report or case review to be shared with the Ombudsman.
+    exclude:
+      - Apologies from a senior officer with no review (D1).
+
+  - id: D12
+    label: Vulnerability or risk assessment of the household
+    definition: >-
+      The Ombudsman orders or recommends that the landlord assess or record the
+      household's vulnerabilities or carry out a risk or health and safety
+      assessment that takes them into account.
+    include:
+      - Orders to contact the resident to identify vulnerabilities and update records.
+    exclude:
+      - Property-only inspections with no household assessment (D4).
+
+  - id: D13
+    label: Compliance evidence deadline
+    definition: >-
+      The Ombudsman requires the landlord to provide evidence of compliance with
+      its orders by a deadline. value is the deadline as written.
+    value_type: deadline
+    include:
+      - "Evidence of compliance to be provided to the Ombudsman within N weeks."
+    exclude:
+      - Orders with no requirement to evidence compliance.
+
+admin_flags:
+  - id: landlord_failed_to_provide_records
+    label: Landlord did not provide records to the Ombudsman
+    definition: >-
+      The decision says the landlord did not provide, or provided incomplete,
+      records or evidence requested by the Ombudsman.
+    include:
+      - Statements that information was requested and not provided, or that the Ombudsman had to decide without the landlord's records.
+    exclude:
+      - Gaps in the landlord's own records with no mention of a request (H6 instead).
+
+  - id: resident_vulnerability_noted
+    label: Household vulnerability recorded in the decision
+    definition: >-
+      The decision records that someone in the household had a vulnerability:
+      a health condition, disability, age, young children, or pregnancy.
+    include:
+      - Mentions of asthma, respiratory or other health conditions, disabilities, babies or young children, older residents or pregnancy.
+    exclude:
+      - Generic references to "vulnerable residents" in policy summaries.
+
+  - id: health_impact_raised
+    label: Health impact of damp or mould raised
+    definition: >-
+      The resident said, or the decision records, that the damp or mould
+      affected the health of someone in the household.
+    include:
+      - Reported illness, worsening of a condition, medical letters or GP evidence linked by the resident to the damp or mould.
+    exclude:
+      - Health issues unrelated to the property conditions.
+
+  - id: legal_disrepair_claim_noted
+    label: Legal disrepair claim or proceedings mentioned
+    definition: >-
+      The decision mentions a disrepair claim, pre-action protocol letter,
+      solicitor involvement or court proceedings about the property's condition.
+    include:
+      - Any statement that the resident brought or intended a legal disrepair claim.
+    exclude:
+      - Mentions of the Ombudsman's own legal powers.
+
+  - id: paragraph_42_or_jurisdiction_issue
+    label: Jurisdiction limit applied
+    definition: >-
+      The Ombudsman decided that part of the complaint was outside its
+      jurisdiction or would not be investigated, under paragraph 42 of the
+      Housing Ombudsman Scheme or a similar provision (for example matters
+      subject to legal proceedings, not raised through the complaints process,
+      or too old).
+    include:
+      - A determination of outside jurisdiction, or a statement that a matter will not be considered.
+    exclude:
+      - A limit on the period investigated that the decision does not tie to the Scheme's jurisdiction rules.
+
+  - id: special_investigation_or_paragraph_49
+    label: Special or wider investigation
+    definition: >-
+      The decision refers to a special investigation, a wider or systemic
+      investigation, or the Ombudsman's power under paragraph 49 of the Scheme
+      to look into wider failings, in relation to this landlord.
+    include:
+      - Statements that the case is part of, or prompted, a special investigation or a paragraph 49 investigation.
+    exclude:
+      - General references to the Ombudsman's Spotlight reports.
+
+  - id: awaabs_law_referenced
+    label: Awaab's Law referenced
+    definition: >-
+      The decision refers to Awaab's Law or the Hazards in Social Housing
+      (Prescribed Requirements) (England) Regulations 2025 in relation to the
+      landlord's handling.
+    include:
+      - Any reference to Awaab's Law timescales or duties.
+    exclude:
+      - None.
+
+event_types:
+  - id: first_report
+    label: First report of damp or mould
+    definition: >-
+      The date the resident (or someone on their behalf) first reported damp,
+      mould or condensation at the property to the landlord, as found or
+      accepted by the Ombudsman.
+    include:
+      - The earliest report the decision records, even if it was made by phone or to a contractor.
+    exclude:
+      - Reports of an unrelated repair.
+  - id: landlord_aware
+    label: Landlord aware of the hazard
+    definition: >-
+      The date the landlord first became aware of the damp or mould hazard at
+      the property: usually the first report, or an inspection, visit or
+      survey that found it, whichever came first.
+    include:
+      - A visit for another reason at which the landlord's staff or contractor saw the damp or mould.
+    exclude:
+      - Dates when the landlord merely acknowledged a later complaint about a problem it already knew of.
+  - id: emergency_identified
+    label: Emergency hazard identified
+    definition: >-
+      The date the landlord identified, or was told of, damp or mould (or a
+      related hazard) presenting an imminent and significant risk to health or
+      safety, as described in the decision.
+    include:
+      - Hazards the decision describes as an emergency or as requiring urgent action because of an immediate risk.
+    exclude:
+      - Ordinary priority repairs.
+  - id: emergency_action
+    label: Emergency action taken
+    definition: >-
+      The date the landlord took action to deal with an emergency hazard (an
+      emergency visit, make-safe work, or arranging alternative accommodation).
+    include:
+      - Emergency attendance or make-safe work.
+    exclude:
+      - Routine follow-up works.
+  - id: investigation_started
+    label: Investigation started
+    definition: >-
+      The date the landlord began investigating the damp or mould hazard: the
+      first inspection, survey or visit to assess it.
+    include:
+      - First inspection, surveyor visit, damp specialist visit.
+    exclude:
+      - Visits only to wash mould or carry out works, without assessment.
+  - id: investigation_concluded
+    label: Investigation concluded
+    definition: >-
+      The date the inspection or survey that assessed the hazard was completed
+      (for example the date of the survey report or of the visit at which the
+      assessment was completed).
+    include:
+      - Date of a survey report, or of a single visit that both began and completed the assessment (then code both investigation_started and investigation_concluded).
+    exclude:
+      - Later visits that only checked works.
+  - id: written_summary_sent
+    label: Written summary sent to the resident
+    definition: >-
+      The date the landlord gave the resident a written summary of the findings
+      of its investigation (what it found and what it would do).
+    include:
+      - A letter or email setting out inspection or survey findings and next steps.
+    exclude:
+      - Complaint responses that do not set out investigation findings.
+  - id: safety_work_started
+    label: Safety work started
+    definition: >-
+      The date the landlord began work to make the home safe from the damp or
+      mould hazard (for example mould treatment, repairs to stop water ingress,
+      ventilation works).
+    include:
+      - The first day of remedial works addressing the hazard.
+    exclude:
+      - Inspections and surveys.
+  - id: safety_work_completed
+    label: Safety work completed
+    definition: >-
+      The date the landlord completed the work needed to make the home safe from
+      the hazard.
+    include:
+      - Completion of the main remedial works for the hazard.
+    exclude:
+      - Completion of cosmetic redecoration only, unless that was the safety work.
+  - id: preventive_work_started
+    label: Supplementary preventive work started
+    definition: >-
+      The date the landlord began further work intended to stop the hazard
+      recurring (for example insulation, ventilation upgrades, structural
+      repairs) after the immediate safety work.
+    include:
+      - Longer-term works to the cause scheduled after the immediate response.
+    exclude:
+      - The first safety work itself.
+  - id: decant_offered
+    label: Decant offered
+    definition: >-
+      The date the landlord offered the household a temporary move or
+      alternative accommodation because of the damp or mould or the works.
+    include:
+      - Hotel, temporary flat or other alternative accommodation offers.
+    exclude:
+      - Offers of a permanent transfer.
+  - id: decant_started
+    label: Decant started
+    definition: The date the household moved into temporary or alternative accommodation.
+    include:
+      - First night in the temporary accommodation.
+    exclude:
+      - Offers that were not taken up.
+  - id: works_completed
+    label: All works completed
+    definition: >-
+      The date the landlord completed all works relating to the damp or mould,
+      including follow-on and cosmetic works, as recorded in the decision.
+    include:
+      - Final completion of the works the complaint concerned.
+    exclude:
+      - Completion of one job among several still outstanding.
+  - id: complaint_made
+    label: Formal complaint made
+    definition: >-
+      The date the resident made the formal complaint (or the complaint the
+      landlord logged at stage 1) about the damp or mould.
+    include:
+      - The date the landlord's complaint process started.
+    exclude:
+      - Earlier repair reports that were not complaints.
+  - id: stage1_response
+    label: Stage 1 response
+    definition: The date the landlord issued its stage 1 complaint response.
+    include:
+      - First formal complaint response.
+    exclude:
+      - Acknowledgement letters.
+  - id: stage2_request
+    label: Stage 2 escalation requested
+    definition: The date the resident asked for the complaint to be escalated to stage 2 (or the final stage).
+    include:
+      - Escalation requests to the landlord.
+    exclude:
+      - Contacts with the Ombudsman.
+  - id: stage2_response
+    label: Stage 2 (final) response
+    definition: The date the landlord issued its stage 2 or final complaint response.
+    include:
+      - Final response letters.
+    exclude:
+      - Later offers outside the complaint process.
+  - id: ombudsman_referral
+    label: Referral to the Ombudsman
+    definition: The date the resident brought the complaint to the Housing Ombudsman.
+    include:
+      - Date the Ombudsman received the complaint or the resident contacted it.
+    exclude:
+      - Earlier contacts with a designated person or MP.
+  - id: determination
+    label: Ombudsman determination
+    definition: The date of the Ombudsman's determination (the decision date).
+    include:
+      - The decision date shown on the decision.
+    exclude:
+      - Dates of review decisions, unless the decision is the review.
+
+element_categories:
+  - id: damp_mould
+    label: Damp and mould
+    definition: >-
+      The landlord's response to reports of damp, mould or condensation,
+      including repairs and inspections for them.
+    include:
+      - Elements worded as the landlord's handling of, or response to, damp, mould or condensation.
+    exclude:
+      - Complaint handling about damp and mould (complaint_handling).
+  - id: complaint_handling
+    label: Complaint handling
+    definition: The landlord's handling of the complaint itself.
+    include:
+      - Elements worded as complaint handling or the handling of the associated complaint.
+    exclude:
+      - The substance of the complaint.
+  - id: repairs_other
+    label: Other repairs
+    definition: Repairs and property condition other than damp, mould or leaks.
+    include:
+      - Heating, windows, kitchens, general repairs.
+    exclude:
+      - Leaks and water ingress (leak_water).
+  - id: leak_water
+    label: Leaks and water ingress
+    definition: Leaks, water ingress, roof and plumbing failures, flooding, not framed as damp and mould.
+    include:
+      - Elements about leaks or roof repairs.
+    exclude:
+      - Elements that name damp or mould (damp_mould).
+  - id: record_keeping
+    label: Record keeping
+    definition: The landlord's record keeping or knowledge and information management.
+    include:
+      - Elements worded as record keeping.
+    exclude:
+      - None.
+  - id: anti_social_behaviour
+    label: Anti-social behaviour
+    definition: Reports of anti-social behaviour, noise or neighbour nuisance.
+    include:
+      - ASB, noise and nuisance elements.
+    exclude:
+      - None.
+  - id: other
+    label: Other
+    definition: Any other element (rent, service charges, staff conduct, allocations, decants not tied to damp).
+    include:
+      - Anything that fits no other category.
+    exclude:
+      - None.
+
+findings:
+  - id: outside_jurisdiction
+    label: Outside jurisdiction
+    definition: The Ombudsman decided the element was outside its jurisdiction or would not be investigated.
+    include:
+      - Determinations under paragraph 42 of the Scheme.
+    exclude:
+      - None.
+  - id: no_maladministration
+    label: No maladministration
+    definition: The Ombudsman found no maladministration (or no service failure) on the element.
+    include:
+      - '"There was no maladministration in ..."'
+    exclude:
+      - Reasonable redress findings.
+  - id: reasonable_redress
+    label: Reasonable redress
+    definition: >-
+      The Ombudsman found that the landlord offered redress before the
+      investigation which, in the Ombudsman's opinion, resolved the element
+      satisfactorily.
+    include:
+      - '"... the landlord has offered redress ... which resolves the complaint satisfactorily."'
+    exclude:
+      - Findings of service failure with an order to pay the amount offered.
+  - id: service_failure
+    label: Service failure
+    definition: The Ombudsman found service failure on the element.
+    include:
+      - '"There was service failure in ..."'
+    exclude:
+      - Maladministration findings.
+  - id: maladministration
+    label: Maladministration
+    definition: The Ombudsman found maladministration (not severe) on the element.
+    include:
+      - '"There was maladministration in ..."'
+    exclude:
+      - Severe maladministration and no maladministration.
+  - id: severe_maladministration
+    label: Severe maladministration
+    definition: The Ombudsman found severe maladministration on the element.
+    include:
+      - '"There was severe maladministration in ..."'
+    exclude:
+      - None.
+  - id: other
+    label: Other outcome
+    definition: Any other outcome, such as a complaint withdrawn or resolved by mediation.
+    include:
+      - Outcomes that fit none of the categories above.
+    exclude:
+      - None.

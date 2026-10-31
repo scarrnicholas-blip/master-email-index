@@ -1,0 +1,285 @@
+# Entity aliases: landlord names as written in Housing Ombudsman decisions
+# -> the stock entity whose homes form the denominator (RSH SDR for housing
+# associations, LAHS for council-owned stock).
+#
+# Read by hos_pipeline.denominators.rsh.load_aliases. Matching is on the
+# normalised name (case, punctuation, "Limited"/"Ltd"/"The" ignored), so list
+# genuinely different spellings only.
+#
+# Fields per entity
+#   canonical    label used in outputs
+#   source       sdr | lahs: which stock file the entity lives in
+#   stock_names  names to look for in that file, tried in order
+#   entity_id    RSH registration number or ONS code; if it points to a different
+#                row than stock_names, the match is flagged "alias_conflict" for review
+#   reason       why the mapping holds (per entity, overridable per variant)
+#   verify       true = check against the stock file / registers before publishing
+#   period       {from, to}: decision dates the mapping applies to (null = always)
+#   variants     HOS spellings; each may override reason, verify and period
+#
+# Period policy: merged_entity.
+#   Predecessor landlords are mapped to the merged entity for every decision
+#   date, and its stock is read from one post-merger snapshot (use an SDR as at
+#   31 March 2024 or later, after all three mergers below). Counts and stock then
+#   always describe the same organisation. The alternative, predecessor stock for
+#   pre-merger decisions, needs one SDR per year: add variant entries with a
+#   bounded `period` pointing at the predecessor, and load each year's SDR.
+#
+# ALMOs never owned their homes: the council did throughout, and LAHS counts
+# ALMO-managed homes as council stock. So an ALMO maps to its council whatever
+# the date it was brought back in-house. Multi-council ALMOs (e.g. East Kent
+# Housing, which managed four councils' homes) are deliberately not mapped:
+# their decisions need splitting by council by hand.
+
+version: "2026-10-30"
+period_policy: merged_entity
+
+entities:
+  # ---------------------------------------------------------------- mergers
+  - canonical: Metropolitan Thames Valley Housing
+    source: sdr
+    stock_names:
+      - Metropolitan Thames Valley Housing
+      - Metropolitan Housing Trust Limited
+    entity_id: null
+    reason: >-
+      Metropolitan Housing Trust and Thames Valley Housing Association merged in
+      2018 to form Metropolitan Thames Valley Housing (MTVH).
+    verify: true   # confirm the registered provider name MTVH files its SDR under
+    period: null
+    variants:
+      - name: Metropolitan Thames Valley
+      - name: MTVH
+      - name: Metropolitan Housing Trust
+        reason: Predecessor; merged with Thames Valley Housing Association into MTVH in 2018.
+      - name: Thames Valley Housing Association
+        reason: Predecessor; merged with Metropolitan Housing Trust into MTVH in 2018.
+      - name: Thames Valley Housing
+        reason: Predecessor; merged with Metropolitan Housing Trust into MTVH in 2018.
+
+  - canonical: Southern Housing
+    source: sdr
+    stock_names:
+      - Southern Housing
+    entity_id: null
+    reason: >-
+      Formed December 2022 from Optivo and Southern Housing Group. Pre-merger
+      decisions name a predecessor; under the merged_entity policy they count
+      against the merged landlord's stock.
+    verify: true   # confirm the SDR row name, and that a post-merger snapshot is used
+    period: null
+    variants:
+      - name: Optivo
+        reason: Predecessor; merged with Southern Housing Group in December 2022 to form Southern Housing.
+      - name: Southern Housing Group
+        reason: Predecessor; merged with Optivo in December 2022 to form Southern Housing.
+
+  - canonical: Sovereign Network Group
+    source: sdr
+    stock_names:
+      - Sovereign Network Group
+      - Sovereign Network Homes
+      - Sovereign Housing Association Limited
+    entity_id: null
+    reason: Sovereign Housing Association and Network Homes merged in 2023 to form Sovereign Network Group.
+    verify: true   # confirm which registered provider(s) carry the stock in the SDR used
+    period: null
+    variants:
+      - name: Sovereign Housing Association
+        reason: Predecessor; merged with Network Homes in 2023 to form Sovereign Network Group.
+      - name: Sovereign Housing
+        reason: Predecessor; merged with Network Homes in 2023 to form Sovereign Network Group.
+      - name: Network Homes
+        reason: Predecessor; merged with Sovereign Housing Association in 2023 to form Sovereign Network Group.
+
+  # ------------------------------------------------- councils and their ALMOs
+  - canonical: Nottingham City Council
+    source: lahs
+    stock_names: [Nottingham, Nottingham City Council]
+    entity_id: E06000018
+    reason: >-
+      Nottingham City Homes was the council's ALMO, brought back in-house in 2023;
+      the council owned the homes throughout.
+    verify: false
+    variants:
+      - name: Nottingham City Homes
+
+  - canonical: London Borough of Haringey
+    source: lahs
+    stock_names: [Haringey, London Borough of Haringey]
+    entity_id: E09000014
+    reason: Homes for Haringey was the council's ALMO, brought back in-house in 2022; the council owned the homes throughout.
+    verify: false
+    variants:
+      - name: Homes for Haringey
+      - name: Haringey Council
+
+  - canonical: London Borough of Lambeth
+    source: lahs
+    stock_names: [Lambeth, London Borough of Lambeth]
+    entity_id: E09000022
+    reason: Lambeth Living was the council's ALMO, since brought back in-house; the council owned the homes throughout.
+    verify: false
+    variants:
+      - name: Lambeth Living
+      - name: Lambeth Council
+
+  - canonical: London Borough of Lewisham
+    source: lahs
+    stock_names: [Lewisham, London Borough of Lewisham]
+    entity_id: E09000023
+    reason: Lewisham Homes was the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Lewisham Homes]
+
+  - canonical: London Borough of Tower Hamlets
+    source: lahs
+    stock_names: [Tower Hamlets, London Borough of Tower Hamlets]
+    entity_id: E09000030
+    reason: Tower Hamlets Homes was the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Tower Hamlets Homes]
+
+  - canonical: Westminster City Council
+    source: lahs
+    stock_names: [Westminster, City of Westminster]
+    entity_id: E09000033
+    reason: CityWest Homes was Westminster's ALMO managing council-owned homes.
+    verify: false
+    variants: [CityWest Homes, City West Homes]
+
+  - canonical: London Borough of Hackney
+    source: lahs
+    stock_names: [Hackney, London Borough of Hackney]
+    entity_id: E09000012
+    reason: Hackney Homes was the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Hackney Homes]
+
+  - canonical: Royal Borough of Kensington and Chelsea
+    source: lahs
+    stock_names: [Kensington and Chelsea, Royal Borough of Kensington and Chelsea]
+    entity_id: E09000020
+    reason: The Kensington and Chelsea Tenant Management Organisation managed the council's homes until 2018.
+    verify: false
+    variants: [Kensington and Chelsea Tenant Management Organisation, KCTMO]
+
+  - canonical: London Borough of Brent
+    source: lahs
+    stock_names: [Brent, London Borough of Brent]
+    entity_id: E09000005
+    reason: Brent Housing Partnership was the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Brent Housing Partnership]
+
+  - canonical: London Borough of Barnet
+    source: lahs
+    stock_names: [Barnet, London Borough of Barnet]
+    entity_id: E09000003
+    reason: Barnet Homes is the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Barnet Homes]
+
+  - canonical: Manchester City Council
+    source: lahs
+    stock_names: [Manchester, Manchester City Council]
+    entity_id: E08000003
+    reason: Northwards Housing was the council's ALMO for north Manchester, brought back in-house in 2021.
+    verify: false
+    variants: [Northwards Housing]
+
+  - canonical: Stockport Metropolitan Borough Council
+    source: lahs
+    stock_names: [Stockport, Stockport Metropolitan Borough Council]
+    entity_id: E08000007
+    reason: Stockport Homes is the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Stockport Homes]
+
+  - canonical: City of Wolverhampton Council
+    source: lahs
+    stock_names: [Wolverhampton, City of Wolverhampton Council]
+    entity_id: E08000031
+    reason: Wolverhampton Homes is the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Wolverhampton Homes]
+
+  - canonical: Derby City Council
+    source: lahs
+    stock_names: [Derby, Derby City Council]
+    entity_id: E06000015
+    reason: Derby Homes is the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Derby Homes]
+
+  - canonical: City of Doncaster Council
+    source: lahs
+    stock_names: [Doncaster, City of Doncaster Council, Doncaster Metropolitan Borough Council]
+    entity_id: E08000017
+    reason: St Leger Homes of Doncaster is the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [St Leger Homes of Doncaster, St Leger Homes]
+
+  - canonical: Barnsley Metropolitan Borough Council
+    source: lahs
+    stock_names: [Barnsley, Barnsley Metropolitan Borough Council]
+    entity_id: E08000016
+    reason: Berneslai Homes is the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Berneslai Homes]
+
+  - canonical: Solihull Metropolitan Borough Council
+    source: lahs
+    stock_names: [Solihull, Solihull Metropolitan Borough Council]
+    entity_id: E08000029
+    reason: Solihull Community Housing is the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Solihull Community Housing]
+
+  - canonical: Newcastle City Council
+    source: lahs
+    stock_names: [Newcastle upon Tyne, Newcastle City Council]
+    entity_id: E08000021
+    reason: Your Homes Newcastle was the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Your Homes Newcastle]
+
+  - canonical: Bury Council
+    source: lahs
+    stock_names: [Bury, Bury Metropolitan Borough Council]
+    entity_id: E08000002
+    reason: Six Town Housing was the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Six Town Housing]
+
+  - canonical: Kirklees Council
+    source: lahs
+    stock_names: [Kirklees, Kirklees Council]
+    entity_id: E08000034
+    reason: Kirklees Neighbourhood Housing was the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Kirklees Neighbourhood Housing]
+
+  - canonical: Blackpool Council
+    source: lahs
+    stock_names: [Blackpool, Blackpool Council]
+    entity_id: E06000009
+    reason: Blackpool Coastal Housing is the council's ALMO managing council-owned homes.
+    verify: false
+    variants: [Blackpool Coastal Housing]
+
+  - canonical: Colchester City Council
+    source: lahs
+    stock_names: [Colchester, Colchester City Council, Colchester Borough Council]
+    entity_id: E07000071
+    reason: Colchester Borough Homes is the council's ALMO managing council-owned homes.
+    verify: true   # ONS code
+    variants: [Colchester Borough Homes]
+
+  - canonical: Cheltenham Borough Council
+    source: lahs
+    stock_names: [Cheltenham, Cheltenham Borough Council]
+    entity_id: E07000078
+    reason: Cheltenham Borough Homes is the council's ALMO managing council-owned homes.
+    verify: true   # ONS code
+    variants: [Cheltenham Borough Homes]
